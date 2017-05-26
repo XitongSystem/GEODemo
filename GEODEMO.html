@@ -1,0 +1,179 @@
+<meta charset="utf-8">
+<title>Project GEO Video Demo</title>
+
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+var width = 900,
+    height = 800;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + 100)
+    .attr("height", height)
+    .style('display','block')
+    .style('margin','auto')
+
+//==========================
+//EVENT
+//==========================
+//Set event's position: 4 positions
+var marginEvent = 100;
+var eventPosition_x = [marginEvent, marginEvent, width - marginEvent, width - marginEvent];
+var eventPosition_y = [marginEvent, height - marginEvent, marginEvent, height - marginEvent];
+
+//Set event's color: 4 classes
+var color = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3'];
+
+//Set event's scale
+var r = [30, 15, 20 ,50];
+
+//Draw event's positions
+svg.selectAll("circleEvent")
+	.data(eventPosition_x)
+	.enter()
+		.append("circle")
+		.attr("cx", function(d){return d;})
+		.attr("cy", function(d,i){return eventPosition_y[i];})
+		.attr("r", function(d,i){return r[i];})
+		.style("fill", function(d,i){return color[i];})
+//Add animation for events
+function loopAnimation() {
+	var circleAnimation = svg.selectAll("circleAnimation")
+							 .data(eventPosition_x)
+								.enter()
+								.append("circle")
+								.attr("cx", function(d){return d;})
+								.attr("cy", function(d,i){return eventPosition_y[i];})
+								.attr("r", function(d,i){return r[i];})
+								.style("fill", "white")
+								.style("opacity", 0.5)
+    //Animation Loop
+    function repeat() {  
+	circleAnimation.transition()
+		    .style('opacity', 0)
+		    .duration(500)
+		    	.transition()
+		    	.style('opacity', 0.7)
+		    	.duration(1500)
+      			.each("end", repeat);
+    }
+    repeat();
+}
+loopAnimation();
+//==========================
+//GLIMPSE
+//==========================
+//Set rectangles' position: random
+//Assume that glimpse 5 times per classification
+var glimpsePosX = new Array();
+var glimpsePosY = new Array();
+var glimpseSize = new Array();
+for(var i = 0; i < 5; i ++)
+{
+	glimpsePosX.push(Math.random() * (width-200));
+	glimpsePosY.push(Math.random() * (height-200));
+	glimpseSize.push(Math.random() * width/5 + 30);
+}
+svg.selectAll('rectGlimpse')
+	.data(glimpsePosX)
+	.enter()
+	.append('rect')
+	.attr("x", function(d,i){return d;})
+	.attr("y", function(d,i){return glimpsePosY[i];})
+	.attr("width", function(d,i){return glimpseSize[i];})
+	.attr("height", function(d,i){return glimpseSize[i];})	
+	.attr("fill", "white")
+	.attr('stroke','blue')
+	.attr('stroke-width',2)
+	.style("opacity", 0)
+		.transition()
+		.style("opacity",0.3)
+		.duration(500)
+		.delay(function(d,i){return i*500});
+
+//==========================
+//VEHICLE
+//==========================
+//Set Vehicles' position: random
+//Set Vehicles' speed by opacity: random
+var vehiclePositionX = d3.range(800).map(d3.random.normal(width/2, width/6));
+var vehiclePositionY = d3.range(800).map(d3.random.normal(height/2, height/6));
+var vehicleSpeed = new Array();
+var VehicleDirection = new Array();
+for(var i = 0; i < 800; i ++)
+{
+	vehicleSpeed.push(Math.random());
+	VehicleDirection.push(Math.floor(Math.random() * 8));
+}
+svg.selectAll("circleVehicle")
+	.data(vehiclePositionX)
+	.enter()
+		.append("circle")
+			.attr("cx", function(d,i){return d;})
+			.attr("cy", function(d,i){return vehiclePositionY[i];})
+			.attr("r", 5)
+			.style("fill", "#e31a1c")
+			.style("opacity", function(d,i){return vehicleSpeed[i];});
+//Set Vehicles' direction
+/*function calcuDirectionX(vDirection)
+{
+	var directionCoeff = 0;
+	if(vDirection > 0 && vDirection < 4)
+		directionCoeff = 1;
+	else if(vDirection > 4 && vDirection < 8)
+		directionCoeff = -1;
+	return directionCoeff;
+}
+function calcuDirectionY(vDirection)
+{
+	var directionCoeff = 0;
+	if(vDirection > 2 && vDirection < 6)
+		directionCoeff = -1;
+	else if(vDirection != 2 && vDirection != 6)
+		directionCoeff = 1;
+	return directionCoeff;
+}
+var arc = d3.svg.symbol().type('triangle-up')
+					.size(4);
+var direction = svg.selectAll('pathTri')
+				.data(vehiclePositionX)
+				.enter()
+				.append('path')
+				.attr('d',arc)
+				.attr("fill", 'yellow')
+				.attr('stroke','yellow')
+				.attr('stroke-width',1)
+				.attr('transform',function(d,i){ return "translate("+(d+3*calcuDirectionX(VehicleDirection[i]))+","+(vehiclePositionY[i]+3*calcuDirectionY(VehicleDirection[i]))+") rotate(" + VehicleDirection[i]*45 +")"; });
+				*/
+//==========================
+//LEGEND
+//==========================
+var colorAll = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3', '#e31a1c', 'ffff33'];
+svg.append("rect")
+	.attr("x", width + 5)
+	.attr("y", 10)
+	.attr("width", 90)
+	.attr("height", 150)
+	.style("fill", "gray")
+	.style("opacity", 0.3);
+for(var i = 0; i < 5; i ++)
+{
+	svg.append("circle")
+		.attr("cx", width + 15)
+		.attr("cy", 50 + 20 * i)
+		.attr("r", 5)
+		.attr("fill", colorAll[i]);
+}
+svg.append("text")
+	.attr("x", width + 10)
+	.attr("y", 25)
+	.text("Legend:");
+var legend = ['Soccer', 'Accident', 'Meeting', 'NBA', 'Vehicle'];
+for(var i = 0; i < 5; i ++){
+	svg.append("text")
+		.attr("x", width + 20)
+		.attr("y", 50 + 20 * i + 5)
+		.style("font-size", 13)
+		.text(legend[i]);
+}
+</script>
