@@ -13,6 +13,7 @@ var svg = d3.select("body").append("svg")
     .style('display','block')
     .style('margin','auto')
 
+var g = svg.append("g");
 //==========================
 //EVENT
 //==========================
@@ -28,7 +29,7 @@ var color = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3'];
 var r = [30, 15, 20 ,50];
 
 //Draw event's positions
-svg.selectAll("circleEvent")
+g.selectAll("circleEvent")
 	.data(eventPosition_x)
 	.enter()
 		.append("circle")
@@ -38,7 +39,7 @@ svg.selectAll("circleEvent")
 		.style("fill", function(d,i){return color[i];})
 //Add animation for events
 function loopAnimation() {
-	var circleAnimation = svg.selectAll("circleAnimation")
+	var circleAnimation = g.selectAll("circleAnimation")
 							 .data(eventPosition_x)
 								.enter()
 								.append("circle")
@@ -74,7 +75,7 @@ for(var i = 0; i < 5; i ++)
 	glimpsePosY.push(Math.random() * (height-200));
 	glimpseSize.push(Math.random() * width/5 + 30);
 }
-svg.selectAll('rectGlimpse')
+g.selectAll('rectGlimpse')
 	.data(glimpsePosX)
 	.enter()
 	.append('rect')
@@ -105,7 +106,7 @@ for(var i = 0; i < 800; i ++)
 	vehicleSpeed.push(Math.random());
 	VehicleDirection.push(Math.floor(Math.random() * 8));
 }
-svg.selectAll("circleVehicle")
+g.selectAll("circleVehicle")
 	.data(vehiclePositionX)
 	.enter()
 		.append("circle")
@@ -176,4 +177,19 @@ for(var i = 0; i < 5; i ++){
 		.style("font-size", 13)
 		.text(legend[i]);
 }
+//==========================
+//ZOOM
+//==========================
+// zoom and pan
+var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        g.selectAll("circle")
+            .attr("d", path.projection(projection));
+        g.selectAll("path")  
+            .attr("d", path.projection(projection)); 
+
+  });
+svg.call(zoom)
 </script>
