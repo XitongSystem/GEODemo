@@ -1,6 +1,6 @@
 <head>
 <meta charset="utf-8">
-<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script src="http://d3js.org/queue.v1.min.js"></script>
 <style type="text/css">
@@ -92,8 +92,8 @@ var area = d3.svg.area()
 
 queue()
 	.defer(d3.json, 'states.json')
-	.defer(d3.csv, 'cities.csv')
-	.defer(d3.csv, 'dataset.csv')
+	.defer(d3.csv, 'cities.CSV')
+	.defer(d3.csv, 'dataset.CSV')
 	.await(makeMyMap);
 
 function makeMyMap(error, states, cities, dataset) {
