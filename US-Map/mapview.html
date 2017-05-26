@@ -92,8 +92,8 @@ var area = d3.svg.area()
 
 queue()
 	.defer(d3.json, 'states.json')
-	.defer(d3.csv, 'cities.csv')
-	.defer(d3.csv, 'dataset.csv')
+	.defer(d3.csv, 'cities.CSV')
+	.defer(d3.csv, 'dataset.CSV')
 	.await(makeMyMap);
 
 function makeMyMap(error, states, cities, dataset) {
