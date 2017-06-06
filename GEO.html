@@ -1,0 +1,269 @@
+<meta charset="utf-8">
+<title>Project GEO Video Demo</title>
+<body>
+<p>
+  <label for="nTime" 
+     style="display: inline-block; width: 240px; text-align: right">
+     Time = <span id="nTime-value">…</span>
+  </label>
+  <input type="range" min="0" max="9" id="nTime">
+</p>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/queue.v1.min.js"></script>
+<script>
+var width = 700,
+    height = 700;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style('display','block')
+    .style('margin','auto');
+
+var img_size = 24;
+var margin_h = 30, margin_w = 0.5*(width - height + 2*margin_h);
+var size_of_pixel = (height-2*margin_h)/(3*img_size);
+//===============================
+//Create Title
+//===============================
+svg.append('text')
+	.attr('x', width/2)
+	.attr('y', margin_h * 0.8)
+	.style('font-size', 25)
+	.attr('text-anchor','middle')
+	.attr('font-weight','bold')
+	.text('Data Visualization');
+//===============================
+//Create Rectangle
+//===============================
+svg.append('rect')
+	.attr('x', margin_w)
+	.attr('y', margin_h)
+	.attr('fill', 'white').attr('stroke', 'black')
+	.attr('width', width - 2*margin_w)
+	.attr('height', height - 2*margin_h);
+//===============================
+//TXT Direction
+//===============================
+svg.append('text')
+	.attr('x', width/2)
+	.attr('y', margin_h + img_size*size_of_pixel + 25)
+	.style('font-size', 15)
+	.attr('text-anchor','middle')
+	.attr('font-weight','bold')
+	.text('Top');
+svg.append('text')
+	.attr('x', width/2)
+	.attr('y', margin_h + img_size*size_of_pixel + img_size*size_of_pixel - 15)
+	.style('font-size', 15)
+	.attr('text-anchor','middle')
+	.attr('font-weight','bold')
+	.text('Bottom');
+svg.append('text')
+	.attr('x', (width - margin_w*2)/3 + margin_w + 15)
+	.attr('y', height/2)
+	.style('font-size', 15)
+	.attr('text-anchor','start')
+	.attr('font-weight','bold')
+	.text('Left');
+svg.append('text')
+	.attr('x', (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w - 15)
+	.attr('y', height/2)
+	.style('font-size', 15)
+	.attr('text-anchor','end')
+	.attr('font-weight','bold')
+	.text('Right');
+//===============================
+//Create Linear Gradient
+//===============================
+//Needed for gradients			
+var defs = svg.append("defs");
+//Get continuous color scale for the Rainbow 
+var coloursRainbow = ["#2c7bb6", "#00a6ca","#00ccbc","#90eb9d","#ffff8c","#f9d057","#f29e2e","#e76818","#d7191c"];
+var colourRangeRainbow = d3.range(0, 1, 1.0 / (coloursRainbow.length - 1));
+colourRangeRainbow.push(1);
+//Create color gradient
+var colorScaleRainbow = d3.scale.linear()
+	.domain(colourRangeRainbow)
+	.range(coloursRainbow)
+	.interpolate(d3.interpolateHcl);
+//Create the Rainbow color gradient 
+defs.append("linearGradient")
+	.attr("id", "gradient-rainbow-colors")
+	.attr("x1", "0%").attr("y1", "0%")
+	.attr("x2", "100%").attr("y2", "0%")
+	.selectAll("stop") 
+	.data(coloursRainbow)                  
+	.enter().append("stop") 
+	.attr("offset", function(d,i) { return i/(coloursRainbow.length-1); })   
+	.attr("stop-color", function(d) { return d; });
+//Draw the rectangle and fill with gradient
+svg.append("rect")
+	.attr('x', width/2 - 150)
+	.attr('y', height - 0.8*margin_h)
+	.attr("width", 300)
+	.attr("height", 15)
+	.style("fill", "url(#gradient-rainbow-colors)");
+//===============================
+//Load csv data
+//===============================
+// when the input range changes update the angle 
+d3.select("#nTime").on("input", function() {
+  update(+this.value);
+});
+update(0);
+function update(nTime) {
+  // adjust the text on the range slider
+  d3.select("#nTime-value").text(nTime);
+  d3.select("#nTime").property("value", nTime);
+
+var allArray = new Array();
+queue()
+  .defer(d3.csv, 'Vis/0/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'Vis/1/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'Vis/2/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'Vis/3/data'+nTime.toString()+'.csv')
+  .await(makeMyMap);
+
+function makeMyMap(error, tp, rt, bt, lt) {
+	allArray.push(tp);allArray.push(rt);allArray.push(bt);allArray.push(lt);
+	var max = 0, min = 10000;
+	for(var i = 0; i < 4; i ++)
+		for(var j = 0; j < 24; j ++)
+			for(var k = 0; k < 24; k ++){
+				if(max < parseInt(allArray[i][j][k]))
+					max = parseInt(allArray[i][j][k]);
+				if(min > parseInt(allArray[i][j][k]))
+					min = parseInt(allArray[i][j][k]);
+			}
+	//Needed to map the values of the dataset to the color scale
+	var colorInterpolateRainbow = d3.scale.linear()
+		.domain([min, max])
+		.range([0,1]);
+	//==============================
+	//Draw
+	//==============================
+	for(var i = 0; i < img_size; i ++)
+		for(var j = 0; j < img_size; j ++){
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j)
+				.attr('y', margin_h + i*size_of_pixel)
+				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(tp[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w + size_of_pixel*j)
+				.attr('y', margin_h + img_size*size_of_pixel + i*size_of_pixel)
+				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(rt[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j)
+				.attr('y', margin_h + 2*img_size*size_of_pixel + i*size_of_pixel)
+				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(bt[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j - img_size*size_of_pixel)
+				.attr('y', margin_h + img_size*size_of_pixel + i*size_of_pixel)
+				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(lt[i][j])));
+		}
+	//==============================
+	//Update ColorSquence Legend
+	//==============================
+	svg.select('#start').remove();
+	svg.select('#middle').remove();
+	svg.select('#end').remove();
+	svg.append('text').attr('id','start')
+		.attr('x', width/2 - 150).attr('y', height)
+		.text('0').attr('font-size', 12).attr('text-anchor', 'middle')
+	svg.append('text').attr('id','end')
+		.attr('x', width/2 + 150).attr('y', height)
+		.text(max.toString()).attr('font-size', 12).attr('text-anchor', 'middle')
+	svg.append('text').attr('id','middle')
+		.attr('x', width/2).attr('y', height)
+		.text((0.5*max).toString()).attr('font-size', 12).attr('text-anchor', 'middle')
+	//==============================
+	//Draw Glimpse Position
+	//==============================
+	//Set rectangles' position: random
+	//Assume that glimpse 5 times per classification
+	var glimpsePosX = new Array();
+	var glimpsePosY = new Array();
+	var glimpseSize = new Array();
+	for(var i = 0; i < 5; i ++)
+	{
+		glimpsePosX.push(Math.random() * img_size * size_of_pixel/2);
+		glimpsePosY.push(Math.random() * img_size * size_of_pixel/2);
+		glimpseSize.push(Math.random() * img_size * size_of_pixel/2);
+	}
+	for(var j = 0; j < 4; j ++){
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize[i];})
+			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + img_size*size_of_pixel + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize[i];})
+			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + 2*img_size*size_of_pixel + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize[i];})
+			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w - img_size*size_of_pixel+d;})
+			.attr("y", function(d,i){return margin_h + img_size*size_of_pixel + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize[i];})
+			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		}
+}
+}
+</script>
