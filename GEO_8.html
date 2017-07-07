@@ -6,13 +6,13 @@
      style="display: inline-block; width: 240px; text-align: right">
      Time = <span id="nTime-value">…</span>
   </label>
-  <input type="range" min="0" max="9" id="nTime">
+  <input type="range" min="0" max="19" id="nTime">
 </p>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script src="https://d3js.org/queue.v1.min.js"></script>
 <script>
 var width = 700,
-    height = 700;
+    height = 750;
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
@@ -20,9 +20,13 @@ var svg = d3.select("body").append("svg")
     .style('display','block')
     .style('margin','auto');
 
-var img_size = 24;
-var margin_h = 30, margin_w = 0.5*(width - height + 2*margin_h);
-var size_of_pixel = (height-2*margin_h)/(3*img_size);
+var img_size_h = 128;
+var img_size_w = 64;
+
+var margin_h = 30
+var margin_w = 60;
+var size_of_pixel_w = (width-2*margin_w)/(3*img_size_w);
+var size_of_pixel_h = (height-2*margin_h)/(3*img_size_h);
 //===============================
 //Create Title
 //===============================
@@ -47,14 +51,14 @@ svg.append('rect')
 //===============================
 svg.append('text')
 	.attr('x', width/2)
-	.attr('y', margin_h + img_size*size_of_pixel + 25)
+	.attr('y', margin_h + img_size_h*size_of_pixel_h + 25)
 	.style('font-size', 15)
 	.attr('text-anchor','middle')
 	.attr('font-weight','bold')
 	.text('Top');
 svg.append('text')
 	.attr('x', width/2)
-	.attr('y', margin_h + img_size*size_of_pixel + img_size*size_of_pixel - 15)
+	.attr('y', margin_h + 2*img_size_h*size_of_pixel_h - 15)
 	.style('font-size', 15)
 	.attr('text-anchor','middle')
 	.attr('font-weight','bold')
@@ -67,7 +71,7 @@ svg.append('text')
 	.attr('font-weight','bold')
 	.text('Left');
 svg.append('text')
-	.attr('x', (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w - 15)
+	.attr('x', (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w - 15)
 	.attr('y', height/2)
 	.style('font-size', 15)
 	.attr('text-anchor','end')
@@ -119,18 +123,30 @@ function update(nTime) {
 
 var allArray = new Array();
 queue()
-  .defer(d3.csv, 'Vis/0/data'+nTime.toString()+'.csv')
-  .defer(d3.csv, 'Vis/1/data'+nTime.toString()+'.csv')
-  .defer(d3.csv, 'Vis/2/data'+nTime.toString()+'.csv')
-  .defer(d3.csv, 'Vis/3/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/0/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/1/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/2/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/3/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/4/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/5/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/6/data'+nTime.toString()+'.csv')
+  .defer(d3.csv, 'vis_new/7/data'+nTime.toString()+'.csv')
   .await(makeMyMap);
 
-function makeMyMap(error, tp, rt, bt, lt) {
-	allArray.push(tp);allArray.push(rt);allArray.push(bt);allArray.push(lt);
+function makeMyMap(error, tp, rt, bt, lt, tr, br, bl, tl) {
+	allArray.push(tp);
+	allArray.push(rt);
+	allArray.push(bt);
+	allArray.push(lt);
+	allArray.push(tr);
+	allArray.push(br);
+	allArray.push(bl);
+	allArray.push(tl);
+
 	var max = 0, min = 10000;
-	for(var i = 0; i < 4; i ++)
-		for(var j = 0; j < 24; j ++)
-			for(var k = 0; k < 24; k ++){
+	for(var i = 0; i < 8; i ++)
+		for(var j = 0; j < img_size_h; j ++)
+			for(var k = 0; k < img_size_w; k ++){
 				if(max < parseInt(allArray[i][j][k]))
 					max = parseInt(allArray[i][j][k]);
 				if(min > parseInt(allArray[i][j][k]))
@@ -143,31 +159,55 @@ function makeMyMap(error, tp, rt, bt, lt) {
 	//==============================
 	//Draw
 	//==============================
-	for(var i = 0; i < img_size; i ++)
-		for(var j = 0; j < img_size; j ++){
+	for(var i = 0; i < img_size_h; i ++)
+		for(var j = 0; j < img_size_w; j ++){
 			svg.append('rect')
-				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j)
-				.attr('y', margin_h + i*size_of_pixel)
-				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
 				.style('fill',colorScaleRainbow(colorInterpolateRainbow(tp[i][j])));
 
 			svg.append('rect')
-				.attr('x', (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w + size_of_pixel*j)
-				.attr('y', margin_h + img_size*size_of_pixel + i*size_of_pixel)
-				.attr('width',size_of_pixel).attr('height',size_of_pixel)
-				.style('fill',colorScaleRainbow(colorInterpolateRainbow(rt[i][j])));
+				.attr('x', margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(tl[i][j])));
 
 			svg.append('rect')
-				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j)
-				.attr('y', margin_h + 2*img_size*size_of_pixel + i*size_of_pixel)
-				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.attr('x', (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + img_size_h*size_of_pixel_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(rt[i][j])));
+			
+			svg.append('rect')
+				.attr('x', margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + 2*img_size_h*size_of_pixel_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(bl[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + 2*img_size_h*size_of_pixel_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
 				.style('fill',colorScaleRainbow(colorInterpolateRainbow(bt[i][j])));
 
 			svg.append('rect')
-				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel*j - img_size*size_of_pixel)
-				.attr('y', margin_h + img_size*size_of_pixel + i*size_of_pixel)
-				.attr('width',size_of_pixel).attr('height',size_of_pixel)
+				.attr('x', (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + 2*img_size_h*size_of_pixel_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(br[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + margin_w + size_of_pixel_w*j - img_size_w*size_of_pixel_w)
+				.attr('y', margin_h + img_size_h*size_of_pixel_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
 				.style('fill',colorScaleRainbow(colorInterpolateRainbow(lt[i][j])));
+
+			svg.append('rect')
+				.attr('x', (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w + size_of_pixel_w*j)
+				.attr('y', margin_h + i*size_of_pixel_h)
+				.attr('width',size_of_pixel_w).attr('height',size_of_pixel_h)
+				.style('fill',colorScaleRainbow(colorInterpolateRainbow(tr[i][j])));
 		}
 	//==============================
 	//Update ColorSquence Legend
@@ -191,22 +231,25 @@ function makeMyMap(error, tp, rt, bt, lt) {
 	//Assume that glimpse 5 times per classification
 	var glimpsePosX = new Array();
 	var glimpsePosY = new Array();
-	var glimpseSize = new Array();
+	var glimpseSize_w = new Array();
+	var glimpseSize_h = new Array();
 	for(var i = 0; i < 5; i ++)
 	{
-		glimpsePosX.push(Math.random() * img_size * size_of_pixel/2);
-		glimpsePosY.push(Math.random() * img_size * size_of_pixel/2);
-		glimpseSize.push(Math.random() * img_size * size_of_pixel/2);
+		glimpsePosX.push(Math.random() * img_size_w * size_of_pixel_w/2);
+		glimpsePosY.push(Math.random() * img_size_h * size_of_pixel_h/2);
+		glimpseSize_w.push(Math.random() * img_size_w * size_of_pixel_w/2);
+		glimpseSize_h.push(Math.random() * img_size_h * size_of_pixel_h/2);
 	}
 	for(var j = 0; j < 4; j ++){
+		//TP
 		svg.selectAll('rectGlimpse')
 			.data(glimpsePosX)
 			.enter()
 			.append('rect').attr('class','rectGlimpse')
 			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w+d;})
 			.attr("y", function(d,i){return margin_h + glimpsePosY[i];})
-			.attr("width", function(d,i){return glimpseSize[i];})
-			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
 			.attr("fill", "none")
 			.attr('stroke','#762a83')
 			.attr('stroke-width',2)
@@ -215,14 +258,15 @@ function makeMyMap(error, tp, rt, bt, lt) {
 				.style("opacity",0.5)
 				.duration(500)
 				.delay(function(d,i){return i*500});
+		//TL
 		svg.selectAll('rectGlimpse')
 			.data(glimpsePosX)
 			.enter()
 			.append('rect').attr('class','rectGlimpse')
-			.attr("x", function(d,i){return (width - margin_w*2)/3 + img_size*size_of_pixel + margin_w+d;})
-			.attr("y", function(d,i){return margin_h + img_size*size_of_pixel + glimpsePosY[i];})
-			.attr("width", function(d,i){return glimpseSize[i];})
-			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w - img_size_w*size_of_pixel_w+d;})
+			.attr("y", function(d,i){return margin_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
 			.attr("fill", "none")
 			.attr('stroke','#762a83')
 			.attr('stroke-width',2)
@@ -231,14 +275,50 @@ function makeMyMap(error, tp, rt, bt, lt) {
 				.style("opacity",0.5)
 				.duration(500)
 				.delay(function(d,i){return i*500});
+		//TR
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+
+		//Right
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + img_size_h*size_of_pixel_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		//Bottom
 		svg.selectAll('rectGlimpse')
 			.data(glimpsePosX)
 			.enter()
 			.append('rect').attr('class','rectGlimpse')
 			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w+d;})
-			.attr("y", function(d,i){return margin_h + 2*img_size*size_of_pixel + glimpsePosY[i];})
-			.attr("width", function(d,i){return glimpseSize[i];})
-			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("y", function(d,i){return margin_h + 2*img_size_h*size_of_pixel_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
 			.attr("fill", "none")
 			.attr('stroke','#762a83')
 			.attr('stroke-width',2)
@@ -247,14 +327,49 @@ function makeMyMap(error, tp, rt, bt, lt) {
 				.style("opacity",0.5)
 				.duration(500)
 				.delay(function(d,i){return i*500});
+		//BL
 		svg.selectAll('rectGlimpse')
 			.data(glimpsePosX)
 			.enter()
 			.append('rect').attr('class','rectGlimpse')
-			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w - img_size*size_of_pixel+d;})
-			.attr("y", function(d,i){return margin_h + img_size*size_of_pixel + glimpsePosY[i];})
-			.attr("width", function(d,i){return glimpseSize[i];})
-			.attr("height", function(d,i){return glimpseSize[i];})	
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w - img_size_w*size_of_pixel_w+d;})
+			.attr("y", function(d,i){return margin_h + 2*img_size_h*size_of_pixel_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		//BR
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + img_size_w*size_of_pixel_w + margin_w+d;})
+			.attr("y", function(d,i){return margin_h + 2*img_size_h*size_of_pixel_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
+			.attr("fill", "none")
+			.attr('stroke','#762a83')
+			.attr('stroke-width',2)
+			.style("opacity", 0)
+				.transition()
+				.style("opacity",0.5)
+				.duration(500)
+				.delay(function(d,i){return i*500});
+		//Left
+		svg.selectAll('rectGlimpse')
+			.data(glimpsePosX)
+			.enter()
+			.append('rect').attr('class','rectGlimpse')
+			.attr("x", function(d,i){return (width - margin_w*2)/3 + margin_w - img_size_w*size_of_pixel_w+d;})
+			.attr("y", function(d,i){return margin_h + img_size_h*size_of_pixel_h + glimpsePosY[i];})
+			.attr("width", function(d,i){return glimpseSize_w[i];})
+			.attr("height", function(d,i){return glimpseSize_h[i];})	
 			.attr("fill", "none")
 			.attr('stroke','#762a83')
 			.attr('stroke-width',2)
